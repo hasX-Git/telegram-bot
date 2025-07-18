@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	"google.golang.org/genai"
@@ -23,7 +24,11 @@ func InitServices() {
 
 	Ctx = context.Background()
 
-	LoadEnv()
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
 	botToken := os.Getenv("TOKEN")
 	apiKey := os.Getenv("GEMINI_API_KEY")
 
