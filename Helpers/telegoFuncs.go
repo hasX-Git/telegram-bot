@@ -1,0 +1,55 @@
+package Helpers
+
+import (
+	"log"
+
+	"github.com/mymmrac/telego"
+	th "github.com/mymmrac/telego/telegohandler"
+	tu "github.com/mymmrac/telego/telegoutil"
+	"google.golang.org/genai"
+)
+
+const prompt = "If the user seems to ask for some command, offer \"/help\" command ONLY. Otherwise, just respond without offering the command\n"
+const aimodel = "gemini-2.5-flash"
+
+func Start(ctx *th.Context, update telego.Update) error {
+
+	keyboard := tu.Keyboard(
+		tu.KeyboardRow(
+			tu.KeyboardButton("/start"),
+			tu.KeyboardButton("/help"),
+			tu.KeyboardButton("/info"),
+		),
+		tu.KeyboardRow(
+			tu.KeyboardButton("/insertFile"),
+			tu.KeyboardButton("/hetFile"),
+			tu.KeyboardButton("/getAccountInfo"),
+		),
+	)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "Select key").WithReplyMarkup(keyboard))
+
+	return nil
+}
+
+func Chat(ctx *th.Context, update telego.Update) error {
+	if update.Message != nil {
+		text := "\"" + update.Message.Text + "\"\n"
+
+		response, err := Client.Models.GenerateContent(ctx, aimodel, genai.Text(text+prompt), nil)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), response.Text()))
+	}
+	return nil
+}
+
+func Help(ctx *th.Context, update telego.Update) error {
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "List of all commands"))
+
+	return nil
+}
