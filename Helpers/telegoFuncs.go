@@ -2,6 +2,7 @@ package Helpers
 
 import (
 	"log"
+	"os"
 
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -32,6 +33,32 @@ func Start(ctx *th.Context, update telego.Update) error {
 	return nil
 }
 
+func Help(ctx *th.Context, update telego.Update) error {
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "List of all commands"))
+
+	return nil
+}
+
+func GetFile(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+
+	file, err := os.Open("files/test.txt")
+	if err != nil {
+		log.Println("error")
+		return err
+	}
+
+	document := tu.Document(
+		tu.ID(chatID),
+		tu.File(file),
+	)
+
+	_, _ = ctx.Bot().SendDocument(ctx, document)
+
+	return nil
+}
+
 func Chat(ctx *th.Context, update telego.Update) error {
 	if update.Message != nil {
 		text := "\"" + update.Message.Text + "\"\n"
@@ -44,12 +71,5 @@ func Chat(ctx *th.Context, update telego.Update) error {
 
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), response.Text()))
 	}
-	return nil
-}
-
-func Help(ctx *th.Context, update telego.Update) error {
-
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "List of all commands"))
-
 	return nil
 }
