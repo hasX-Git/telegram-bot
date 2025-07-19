@@ -22,7 +22,7 @@ func Start(ctx *th.Context, update telego.Update) error {
 		),
 		tu.KeyboardRow(
 			tu.KeyboardButton("/insertFile"),
-			tu.KeyboardButton("/hetFile"),
+			tu.KeyboardButton("/getFile"),
 			tu.KeyboardButton("/getAccountInfo"),
 		),
 	)

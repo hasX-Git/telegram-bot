@@ -15,8 +15,9 @@ var (
 	Ctx     context.Context
 	Bot     *telego.Bot
 	Updates <-chan telego.Update
-	Client  *genai.Client
 	Bh      *th.BotHandler
+
+	Client *genai.Client
 )
 
 func InitServices() {
