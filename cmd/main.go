@@ -1,19 +1,20 @@
 package main
 
 import (
-	"tg-bot/Helpers"
+	Handler "tg-bot/Handlers"
 
 	th "github.com/mymmrac/telego/telegohandler"
 )
 
 func main() {
-	Helpers.InitServices()
-	// Helpers.ConnectToDB()
+	Handler.InitServices()
+	Handler.ConnectToDB()
 
-	Helpers.Bh.Handle(Helpers.Start, th.CommandEqual("start"))
-	Helpers.Bh.Handle(Helpers.Help, th.CommandEqual("help"))
-	Helpers.Bh.Handle(Helpers.GetFile, th.CommandEqual("getfile"))
-	Helpers.Bh.Handle(Helpers.Chat, th.AnyMessage())
+	Handler.Bh.Handle(Handler.Start, th.CommandEqual("start"))
+	Handler.Bh.Handle(Handler.Help, th.CommandEqual("help"))
+	Handler.Bh.Handle(Handler.GetTestFile, th.CommandEqual("testfile"))
+	Handler.Bh.Handle(Handler.GetFile, th.CommandEqual("getfile"))
+	Handler.Bh.Handle(Handler.Message, th.AnyMessage())
 
-	_ = Helpers.Bh.Start()
+	_ = Handler.Bh.Start()
 }

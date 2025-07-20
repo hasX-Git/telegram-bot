@@ -1,14 +1,18 @@
-package Helpers
+package Handler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	"google.golang.org/genai"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
@@ -18,6 +22,8 @@ var (
 	Bh      *th.BotHandler
 
 	Client *genai.Client
+
+	DB *gorm.DB
 )
 
 func InitServices() {
@@ -53,6 +59,40 @@ func InitServices() {
 	})
 	if err != nil {
 		log.Fatal("error with genai client")
+	}
+
+}
+
+func ConnectToDB() {
+
+	var err error
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_SSLMODE"),
+	)
+
+	for i := 0; i < 10; i++ {
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+		if err == nil {
+			log.Println("Connected")
+			break
+		}
+		log.Println("Reconnecting...")
+		time.Sleep(2 * time.Second)
+	}
+
+	if err != nil {
+		log.Fatal("Conneciton to database failed")
+	}
+
+	if err = DB.AutoMigrate(&Account{}, &ClientInfo{}, &Transaction{}, &File{}); err != nil {
+		log.Fatal("migration failed")
 	}
 
 }

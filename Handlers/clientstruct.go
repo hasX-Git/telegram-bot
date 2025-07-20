@@ -1,4 +1,4 @@
-package Helpers
+package Handler
 
 type Transaction struct {
 	AID  string `gorm:"column:aid"`

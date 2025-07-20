@@ -1,4 +1,4 @@
-package Helpers
+package Handler
 
 import (
 	"log"
@@ -40,7 +40,7 @@ func Help(ctx *th.Context, update telego.Update) error {
 	return nil
 }
 
-func GetFile(ctx *th.Context, update telego.Update) error {
+func GetTestFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
 
 	file, err := os.Open("files/test.txt")
@@ -59,8 +59,25 @@ func GetFile(ctx *th.Context, update telego.Update) error {
 	return nil
 }
 
-func Chat(ctx *th.Context, update telego.Update) error {
+func GetFile(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	fileHash.Store(chatID, true)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
+
+	return nil
+}
+
+func Message(ctx *th.Context, update telego.Update) error {
 	if update.Message != nil {
+		chatID := update.Message.Chat.ID
+
+		if isIn, _ := fileHash.Load(chatID); isIn == true {
+			_, _ = ctx.Bot().SendDocument(ctx, findFile(ctx, update))
+			fileHash.Delete(chatID)
+			return nil
+		}
+
 		text := "\"" + update.Message.Text + "\"\n"
 
 		response, err := Client.Models.GenerateContent(ctx, aimodel, genai.Text(text+prompt), nil)
@@ -69,7 +86,7 @@ func Chat(ctx *th.Context, update telego.Update) error {
 			return err
 		}
 
-		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), response.Text()))
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response.Text()))
 	}
 	return nil
 }
