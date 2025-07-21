@@ -35,7 +35,7 @@ func Start(ctx *th.Context, update telego.Update) error {
 
 func Help(ctx *th.Context, update telego.Update) error {
 
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "List of all commands"))
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "TODO: List of all commands"))
 
 	return nil
 }
@@ -110,5 +110,13 @@ func GetFileList(ctx *th.Context, update telego.Update) error {
 	}
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response))
+	return nil
+}
+
+func Info(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "TODO: Info about bot"))
+
 	return nil
 }
