@@ -14,6 +14,7 @@ func main() {
 	Handler.Bh.Handle(Handler.Help, th.CommandEqual("help"))
 	Handler.Bh.Handle(Handler.GetTestFile, th.CommandEqual("testfile"))
 	Handler.Bh.Handle(Handler.GetFile, th.CommandEqual("getfile"))
+	Handler.Bh.Handle(Handler.GetFileList, th.CommandEqual("getfilelist"))
 	Handler.Bh.Handle(Handler.Message, th.AnyMessage())
 
 	_ = Handler.Bh.Start()

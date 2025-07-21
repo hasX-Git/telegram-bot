@@ -90,3 +90,25 @@ func Message(ctx *th.Context, update telego.Update) error {
 	}
 	return nil
 }
+
+func GetFileList(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	var files []File
+
+	result := DB.Find(&files)
+
+	if result.Error != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error while getting list"))
+		log.Println("Error:", result.Error)
+		return result.Error
+	}
+
+	var response string
+
+	for _, h := range files {
+		response += (h.Hash + ", \n")
+	}
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response))
+	return nil
+}

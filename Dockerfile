@@ -9,6 +9,6 @@ COPY . .
 
 RUN go build -o tgbot ./cmd
 
-EXPOSE 2266
+EXPOSE 2265
 
 CMD ["./tgbot"]

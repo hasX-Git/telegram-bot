@@ -7,10 +7,10 @@ services:
     env_file:
       - .env
     networks:
-      - postgres-networks
+      - mybankproject_postgres-networks
     volumes:
       - ./../MyBankProject/files:/tgApp/files
 
 networks:
-  postgres-networks:
-    external: true
+  mybankproject_postgres-networks:
+     external: true

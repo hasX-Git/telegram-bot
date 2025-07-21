@@ -65,6 +65,8 @@ func InitServices() {
 
 func ConnectToDB() {
 
+	log.Println("bank db connection")
+
 	var err error
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
@@ -80,7 +82,7 @@ func ConnectToDB() {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 		if err == nil {
-			log.Println("Connected")
+			log.Println("bank db connected")
 			break
 		}
 		log.Println("Reconnecting...")
