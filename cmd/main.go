@@ -1,7 +1,7 @@
 package main
 
 import (
-	H "tg-bot/Handlers"
+	H "tg-bot/internal"
 
 	th "github.com/mymmrac/telego/telegohandler"
 )
