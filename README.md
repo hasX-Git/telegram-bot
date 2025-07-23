@@ -25,6 +25,11 @@ Wherever there is <ins>#change</ins> comment, you can change those to any prefer
 Wherever there is <ins>#AP</ins>, which stands for App Port, it must be the same for all ports with #AP comment. For example, if in .env file the port for #AP is 5432, it must be 5432 for #AP in Dockerfile and docker-compose. Same with <ins>#DP</ins>, Database Port
 
 ### 3. Running program
-Run the following line
 
-    docker compose up --build
+If you decided to leave tgApp depend on myBank, then first run the myBank container with
+
+    docker compose up --build -d
+
+Then run tgApp
+
+    docker compose up --build -d
