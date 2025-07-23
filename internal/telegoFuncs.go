@@ -1,8 +1,7 @@
-package Handler
+package Internal
 
 import (
 	"log"
-	"os"
 
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -22,7 +21,7 @@ func Start(ctx *th.Context, update telego.Update) error {
 			tu.KeyboardButton("/info"),
 		),
 		tu.KeyboardRow(
-			tu.KeyboardButton("/insertFile"),
+			tu.KeyboardButton("/getfilelist"),
 			tu.KeyboardButton("/getFile"),
 			tu.KeyboardButton("/getAccountInfo"),
 		),
@@ -40,30 +39,20 @@ func Help(ctx *th.Context, update telego.Update) error {
 	return nil
 }
 
-func GetTestFile(ctx *th.Context, update telego.Update) error {
-	chatID := update.Message.Chat.ID
-
-	file, err := os.Open("files/test.txt")
-	if err != nil {
-		log.Println("error")
-		return err
-	}
-
-	document := tu.Document(
-		tu.ID(chatID),
-		tu.File(file),
-	)
-
-	_, _ = ctx.Bot().SendDocument(ctx, document)
-
-	return nil
-}
-
 func GetFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
 	fileHash.Store(chatID, true)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
+
+	return nil
+}
+
+func GetAccountInfo(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	acc.Store(chatID, true)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert account ID"))
 
 	return nil
 }
@@ -75,6 +64,12 @@ func Message(ctx *th.Context, update telego.Update) error {
 		if isIn, _ := fileHash.Load(chatID); isIn == true {
 			_, _ = ctx.Bot().SendDocument(ctx, findFile(ctx, update))
 			fileHash.Delete(chatID)
+			return nil
+		}
+
+		if isIn, _ := acc.Load(chatID); isIn == true {
+			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), findAcc(update)))
+			acc.Delete(chatID)
 			return nil
 		}
 
@@ -107,6 +102,28 @@ func GetFileList(ctx *th.Context, update telego.Update) error {
 
 	for _, h := range files {
 		response += (h.Hash + ", \n")
+	}
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response))
+	return nil
+}
+
+func GetAccountList(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	var accs []Account
+
+	result := DB.Find(&accs)
+
+	if result.Error != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error while getting list"))
+		log.Println("Error:", result.Error)
+		return result.Error
+	}
+
+	var response string
+
+	for _, h := range accs {
+		response += (h.AID + ", \n")
 	}
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response))

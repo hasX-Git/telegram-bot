@@ -1,4 +1,4 @@
-package Handler
+package Internal
 
 import (
 	"context"

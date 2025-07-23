@@ -1,9 +1,10 @@
-package Handler
+package Internal
 
 import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/mymmrac/telego"
@@ -13,6 +14,7 @@ import (
 )
 
 var fileHash sync.Map
+var acc sync.Map
 
 func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 
@@ -45,4 +47,39 @@ func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams 
 	)
 
 	return document
+}
+
+func findAcc(update telego.Update) string {
+	AID := update.Message.Text
+	var acc Account
+
+	result := DB.Preload("PersonInfo").Preload("Trs").First(&acc, "aid = ?", AID)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return "no such file in database"
+		} else {
+			return "error occured when searching for file"
+		}
+	}
+
+	var accinfo string
+
+	accinfo +=
+		"First Name: " + acc.PersonInfo.Firstn + "\n" +
+			"Last Name: " + acc.PersonInfo.Lastn + "\n" +
+			"National ID: " + acc.PersonInfo.NID + "\n" +
+			"Account ID " + acc.AID + "\n" +
+			"Balance: " + strconv.Itoa(int(acc.Balance)) + "\n" +
+			"Transactions:\n"
+
+	for _, tr := range acc.Trs {
+		accinfo +=
+			"\tSum: " + strconv.Itoa(int(tr.Sum)) + "\n" +
+				"\tTransaction ID: " + tr.TrID + "\n" +
+				"\n"
+	}
+
+	return accinfo
+
 }
