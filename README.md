@@ -1,6 +1,6 @@
 # Bank API
 
-## Prerequisite
+## Prerequisites
 This bot works in pair with the myBank repository, specifically with its database, so it won't work on its own unless you create a new database for this bot.
 
 You can get myBank repository with
@@ -16,7 +16,7 @@ Pull the repository on your local machine with
     git clone https://github.com/hasX-Git/telegram-bot.git
 
 ### 2. Working with .example files
-There are 3 example files: .env.example, Dockerfile.Example, and docker-compose_example.yml.
+There are 3 example files: .env_example, Dockerfile_example, and docker-compose_example.yml.
 
 These are templates for .env, Dockerfile and docker-compose.yml respectively.
 
