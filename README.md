@@ -26,7 +26,7 @@ Wherever there is <ins>#AP</ins>, which stands for App Port, it must be the same
 
 ### 3. Running program
 
-If you decided to leave tgApp depend on myBank, then first run the myBank container with
+First run the myBank container with
 
     docker compose up --build -d
 
