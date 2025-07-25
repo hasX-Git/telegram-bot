@@ -1,8 +1,11 @@
 package Internal
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -10,11 +13,11 @@ import (
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	tu "github.com/mymmrac/telego/telegoutil"
+	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
-var fileHash sync.Map
-var acc sync.Map
+var fileGet sync.Map
 
 func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 
@@ -49,6 +52,8 @@ func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams 
 	return document
 }
 
+var accGet sync.Map
+
 func findAcc(update telego.Update) string {
 	AID := update.Message.Text
 	var acc Account
@@ -82,4 +87,93 @@ func findAcc(update telego.Update) string {
 
 	return accinfo
 
+}
+
+var filePost sync.Map
+
+func hash(s string) string {
+	hash := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(hash[:])
+}
+
+func loadFile(ctx *th.Context, update telego.Update) {
+	chatID := update.Message.Chat.ID
+
+	var params telego.GetFileParams
+	params.FileID = update.Message.Document.FileID
+
+	file, err := Bot.GetFile(ctx, &params)
+
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file"))
+		return
+	}
+
+	urlFile := Bot.FileDownloadURL(file.FilePath)
+	bytedFile, err := tu.DownloadFile(urlFile)
+
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file's bytes"))
+		return
+	}
+
+	filepath := "./files/" + update.Message.Document.FileName
+
+	err = os.WriteFile(filepath, bytedFile, 0644)
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when downloading file"))
+		return
+	}
+
+	var newFile File
+	newFile.Filename = update.Message.Document.FileName
+	newFile.Hash = hash(update.Message.Document.FileName)
+
+	result := DB.Create(&newFile)
+
+	if result.Error != nil {
+		log.Println("Error:", result)
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when updating file db"))
+		return
+	}
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "File uploaded. File hash: "+newFile.Hash))
+}
+
+var fileSum sync.Map
+
+func sumFile(ctx *th.Context, update telego.Update) {
+	chatID := update.Message.Chat.ID
+
+	var params telego.GetFileParams
+	params.FileID = update.Message.Document.FileID
+
+	file, err := Bot.GetFile(ctx, &params)
+
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file"))
+		return
+	}
+
+	urlFile := Bot.FileDownloadURL(file.FilePath)
+	bytedFile, err := tu.DownloadFile(urlFile)
+	mimeType := http.DetectContentType(bytedFile)
+
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file's bytes"))
+		return
+	}
+
+	contents := []*genai.Content{}
+
+	contents = append(contents, genai.Text("Summarize the file")...)
+	contents = append(contents, genai.NewContentFromBytes(bytedFile, mimeType, genai.RoleUser))
+
+	summary, err := Client.Models.GenerateContent(ctx, aimodel, contents, nil)
+	if err != nil {
+		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when generating summary"))
+		return
+	}
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), summary.Text()))
 }

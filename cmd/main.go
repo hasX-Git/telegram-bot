@@ -14,6 +14,8 @@ func main() {
 	H.Bh.Handle(H.Help, th.CommandEqual("help"))
 	H.Bh.Handle(H.Info, th.CommandEqual("info"))
 	H.Bh.Handle(H.GetFile, th.CommandEqual("getfile"))
+	H.Bh.Handle(H.LoadFile, th.CommandEqual("loadfile"))
+	H.Bh.Handle(H.FileSummary, th.CommandEqual("sumfile"))
 	H.Bh.Handle(H.GetAccountInfo, th.CommandEqual("getaccountinfo"))
 	H.Bh.Handle(H.GetFileList, th.CommandEqual("getfilelist"))
 	H.Bh.Handle(H.GetAccountList, th.CommandEqual("getaccountlist"))

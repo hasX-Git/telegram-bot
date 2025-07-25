@@ -9,9 +9,6 @@ import (
 	"google.golang.org/genai"
 )
 
-const prompt = "If the user seems to ask for some command, offer \"/help\" command ONLY. Otherwise, just respond without offering the command\n"
-const aimodel = "gemini-2.5-flash"
-
 func Start(ctx *th.Context, update telego.Update) error {
 
 	keyboard := tu.Keyboard(
@@ -41,7 +38,7 @@ func Help(ctx *th.Context, update telego.Update) error {
 
 func GetFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	fileHash.Store(chatID, true)
+	fileGet.Store(chatID, true)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
 
@@ -50,7 +47,7 @@ func GetFile(ctx *th.Context, update telego.Update) error {
 
 func GetAccountInfo(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	acc.Store(chatID, true)
+	accGet.Store(chatID, true)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert account ID"))
 
@@ -61,15 +58,27 @@ func Message(ctx *th.Context, update telego.Update) error {
 	if update.Message != nil {
 		chatID := update.Message.Chat.ID
 
-		if isIn, _ := fileHash.Load(chatID); isIn == true {
+		if isIn, _ := fileGet.Load(chatID); isIn == true {
 			_, _ = ctx.Bot().SendDocument(ctx, findFile(ctx, update))
-			fileHash.Delete(chatID)
+			fileGet.Delete(chatID)
 			return nil
 		}
 
-		if isIn, _ := acc.Load(chatID); isIn == true {
+		if isIn, _ := accGet.Load(chatID); isIn == true {
 			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), findAcc(update)))
-			acc.Delete(chatID)
+			accGet.Delete(chatID)
+			return nil
+		}
+
+		if isIn, _ := filePost.Load(chatID); isIn == true {
+			loadFile(ctx, update)
+			filePost.Delete(chatID)
+			return nil
+		}
+
+		if isIn, _ := fileSum.Load(chatID); isIn == true {
+			sumFile(ctx, update)
+			fileSum.Delete(chatID)
 			return nil
 		}
 
@@ -134,6 +143,24 @@ func Info(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "TODO: Info about bot"))
+
+	return nil
+}
+
+func LoadFile(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	filePost.Store(chatID, true)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file and untick \"Compress the image\" option"))
+
+	return nil
+}
+
+func FileSummary(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	fileSum.Store(chatID, true)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file"))
 
 	return nil
 }

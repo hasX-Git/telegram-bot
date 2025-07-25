@@ -26,6 +26,9 @@ var (
 	DB *gorm.DB
 )
 
+const prompt = "If the user seems to ask for some command, offer \"/help\" command ONLY. Otherwise, just respond without offering the command\n"
+const aimodel = "gemini-2.5-flash"
+
 func InitServices() {
 	var err error
 
