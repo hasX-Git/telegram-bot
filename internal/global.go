@@ -1,4 +1,4 @@
-package Internal
+package internal
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package Internal
+package internal
 
 import (
 	"log"
@@ -33,65 +33,6 @@ func Help(ctx *th.Context, update telego.Update) error {
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "TODO: List of all commands"))
 
-	return nil
-}
-
-func GetFile(ctx *th.Context, update telego.Update) error {
-	chatID := update.Message.Chat.ID
-	fileGet.Store(chatID, true)
-
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
-
-	return nil
-}
-
-func GetAccountInfo(ctx *th.Context, update telego.Update) error {
-	chatID := update.Message.Chat.ID
-	accGet.Store(chatID, true)
-
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert account ID"))
-
-	return nil
-}
-
-func Message(ctx *th.Context, update telego.Update) error {
-	if update.Message != nil {
-		chatID := update.Message.Chat.ID
-
-		if isIn, _ := fileGet.Load(chatID); isIn == true {
-			_, _ = ctx.Bot().SendDocument(ctx, findFile(ctx, update))
-			fileGet.Delete(chatID)
-			return nil
-		}
-
-		if isIn, _ := accGet.Load(chatID); isIn == true {
-			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), findAcc(update)))
-			accGet.Delete(chatID)
-			return nil
-		}
-
-		if isIn, _ := filePost.Load(chatID); isIn == true {
-			loadFile(ctx, update)
-			filePost.Delete(chatID)
-			return nil
-		}
-
-		if isIn, _ := fileSum.Load(chatID); isIn == true {
-			sumFile(ctx, update)
-			fileSum.Delete(chatID)
-			return nil
-		}
-
-		text := "\"" + update.Message.Text + "\"\n"
-
-		response, err := Client.Models.GenerateContent(ctx, aimodel, genai.Text(text+prompt), nil)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-
-		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response.Text()))
-	}
 	return nil
 }
 
@@ -147,9 +88,29 @@ func Info(ctx *th.Context, update telego.Update) error {
 	return nil
 }
 
+//
+
+func GetFile(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	requests.Store(chatID, GETFILE)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
+
+	return nil
+}
+
+func GetAccountInfo(ctx *th.Context, update telego.Update) error {
+	chatID := update.Message.Chat.ID
+	requests.Store(chatID, GETACC)
+
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert account ID"))
+
+	return nil
+}
+
 func LoadFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	filePost.Store(chatID, true)
+	requests.Store(chatID, POSTFILE)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file and untick \"Compress the image\" option"))
 
@@ -158,9 +119,34 @@ func LoadFile(ctx *th.Context, update telego.Update) error {
 
 func FileSummary(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	fileSum.Store(chatID, true)
+	requests.Store(chatID, GETSUM)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file"))
+
+	return nil
+}
+
+//
+
+func Message(ctx *th.Context, update telego.Update) error {
+	if update.Message != nil {
+		chatID := update.Message.Chat.ID
+
+		if _, exists := requests.Load(chatID); exists {
+			requestExecution(ctx, update)
+			requests.Delete(chatID)
+		} else {
+			text := "\"" + update.Message.Text + "\"\n"
+
+			response, err := Client.Models.GenerateContent(ctx, aimodel, genai.Text(text+prompt), nil)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response.Text()))
+		}
+	}
 
 	return nil
 }
