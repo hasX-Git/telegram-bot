@@ -1,4 +1,4 @@
-package internal
+package services
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	u "tg-bot/internal/domain"
 
 	"github.com/joho/godotenv"
 	"github.com/mymmrac/telego"
@@ -26,8 +28,8 @@ var (
 	DB *gorm.DB
 )
 
-const prompt = "If the user seems to ask for some command, offer \"/help\" command ONLY. Otherwise, just respond without offering the command\n"
-const aimodel = "gemini-2.5-flash"
+const Prompt = "If the user seems to ask for some command, offer \"/help\" command ONLY. Otherwise, just respond without offering the command\n"
+const Aimodel = "gemini-2.5-flash"
 
 func InitServices() {
 	var err error
@@ -96,7 +98,7 @@ func ConnectToDB() {
 		log.Fatal("Conneciton to database failed")
 	}
 
-	if err = DB.AutoMigrate(&Account{}, &ClientInfo{}, &Transaction{}, &File{}); err != nil {
+	if err = DB.AutoMigrate(&u.Account{}, &u.ClientInfo{}, &u.Transaction{}, &u.File{}); err != nil {
 		log.Fatal("migration failed")
 	}
 

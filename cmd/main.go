@@ -1,25 +1,26 @@
 package main
 
 import (
-	H "tg-bot/internal"
+	s "tg-bot/internal/infrastructure"
+	r "tg-bot/internal/interface"
 
 	th "github.com/mymmrac/telego/telegohandler"
 )
 
 func main() {
-	H.InitServices()
-	H.ConnectToDB()
+	s.InitServices()
+	s.ConnectToDB()
 
-	H.Bh.Handle(H.Start, th.CommandEqual("start"))
-	H.Bh.Handle(H.Help, th.CommandEqual("help"))
-	H.Bh.Handle(H.Info, th.CommandEqual("info"))
-	H.Bh.Handle(H.GetFile, th.CommandEqual("getfile"))
-	H.Bh.Handle(H.LoadFile, th.CommandEqual("loadfile"))
-	H.Bh.Handle(H.FileSummary, th.CommandEqual("sumfile"))
-	H.Bh.Handle(H.GetAccountInfo, th.CommandEqual("getaccountinfo"))
-	H.Bh.Handle(H.GetFileList, th.CommandEqual("getfilelist"))
-	H.Bh.Handle(H.GetAccountList, th.CommandEqual("getaccountlist"))
-	H.Bh.Handle(H.Message, th.AnyMessage())
+	s.Bh.Handle(r.Start, th.CommandEqual("start"))
+	s.Bh.Handle(r.Help, th.CommandEqual("help"))
+	s.Bh.Handle(r.Info, th.CommandEqual("info"))
+	s.Bh.Handle(r.GetFile, th.CommandEqual("getfile"))
+	s.Bh.Handle(r.LoadFile, th.CommandEqual("loadfile"))
+	s.Bh.Handle(r.FileSummary, th.CommandEqual("sumfile"))
+	s.Bh.Handle(r.GetAccountInfo, th.CommandEqual("getaccountinfo"))
+	s.Bh.Handle(r.GetFileList, th.CommandEqual("getfilelist"))
+	s.Bh.Handle(r.GetAccountList, th.CommandEqual("getaccountlist"))
+	s.Bh.Handle(r.Message, th.AnyMessage())
 
-	_ = H.Bh.Start()
+	_ = s.Bh.Start()
 }

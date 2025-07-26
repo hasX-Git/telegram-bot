@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"sync"
 
+	u "tg-bot/internal/domain"
+	s "tg-bot/internal/infrastructure"
+
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -24,15 +27,15 @@ const (
 	GETSUM   requestType = "getSum"
 )
 
-var requests sync.Map
+var Requests sync.Map
 
-func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
+func getFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 
 	chatID := update.Message.Chat.ID
 	hash := update.Message.Text
-	var dbFile File
+	var dbFile u.File
 
-	result := DB.First(&dbFile, "hash = ?", hash)
+	result := s.DB.First(&dbFile, "hash = ?", hash)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -59,11 +62,11 @@ func findFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams 
 	return document
 }
 
-func findAcc(update telego.Update) string {
+func getAcc(update telego.Update) string {
 	AID := update.Message.Text
-	var acc Account
+	var acc u.Account
 
-	result := DB.Preload("PersonInfo").Preload("Trs").First(&acc, "aid = ?", AID)
+	result := s.DB.Preload("PersonInfo").Preload("Trs").First(&acc, "aid = ?", AID)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -94,7 +97,7 @@ func findAcc(update telego.Update) string {
 
 }
 
-func loadFile(ctx *th.Context, update telego.Update) {
+func postFile(ctx *th.Context, update telego.Update) {
 	chatID := update.Message.Chat.ID
 
 	if update.Message.Document == nil {
@@ -105,14 +108,14 @@ func loadFile(ctx *th.Context, update telego.Update) {
 	var params telego.GetFileParams
 	params.FileID = update.Message.Document.FileID
 
-	file, err := Bot.GetFile(ctx, &params)
+	file, err := s.Bot.GetFile(ctx, &params)
 
 	if err != nil {
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file"))
 		return
 	}
 
-	urlFile := Bot.FileDownloadURL(file.FilePath)
+	urlFile := s.Bot.FileDownloadURL(file.FilePath)
 	bytedFile, err := tu.DownloadFile(urlFile)
 
 	if err != nil {
@@ -128,11 +131,11 @@ func loadFile(ctx *th.Context, update telego.Update) {
 		return
 	}
 
-	var newFile File
+	var newFile u.File
 	newFile.Filename = update.Message.Document.FileName
 	newFile.Hash = hash(update.Message.Document.FileName)
 
-	result := DB.Create(&newFile)
+	result := s.DB.Create(&newFile)
 
 	if result.Error != nil {
 		log.Println("Error:", result)
@@ -143,7 +146,7 @@ func loadFile(ctx *th.Context, update telego.Update) {
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "File uploaded. File hash: "+newFile.Hash))
 }
 
-func sumFile(ctx *th.Context, update telego.Update) {
+func getSumFile(ctx *th.Context, update telego.Update) {
 	chatID := update.Message.Chat.ID
 
 	if update.Message.Document == nil {
@@ -156,14 +159,14 @@ func sumFile(ctx *th.Context, update telego.Update) {
 	var params telego.GetFileParams
 	params.FileID = update.Message.Document.FileID
 
-	file, err := Bot.GetFile(ctx, &params)
+	file, err := s.Bot.GetFile(ctx, &params)
 
 	if err != nil {
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when getting file"))
 		return
 	}
 
-	urlFile := Bot.FileDownloadURL(file.FilePath)
+	urlFile := s.Bot.FileDownloadURL(file.FilePath)
 	bytedFile, err := tu.DownloadFile(urlFile)
 	mimeType := http.DetectContentType(bytedFile)
 
@@ -177,7 +180,7 @@ func sumFile(ctx *th.Context, update telego.Update) {
 	contents = append(contents, genai.Text("Summarize the file")...)
 	contents = append(contents, genai.NewContentFromBytes(bytedFile, mimeType, genai.RoleUser))
 
-	summary, err := Client.Models.GenerateContent(ctx, aimodel, contents, nil)
+	summary, err := s.Client.Models.GenerateContent(ctx, s.Aimodel, contents, nil)
 	if err != nil {
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when generating summary"))
 		return
@@ -186,19 +189,19 @@ func sumFile(ctx *th.Context, update telego.Update) {
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), summary.Text()))
 }
 
-func requestExecution(ctx *th.Context, update telego.Update) {
+func RequestExecution(ctx *th.Context, update telego.Update) {
 	chatID := update.Message.Chat.ID
-	state, _ := requests.Load(chatID)
+	state, _ := Requests.Load(chatID)
 
 	switch state {
 	case GETACC:
-		findAcc(update)
+		getAcc(update)
 	case GETFILE:
-		findFile(ctx, update)
+		getFile(ctx, update)
 	case GETSUM:
-		sumFile(ctx, update)
+		getSumFile(ctx, update)
 	case POSTFILE:
-		loadFile(ctx, update)
+		postFile(ctx, update)
 	}
 
 }

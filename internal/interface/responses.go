@@ -1,7 +1,11 @@
-package internal
+package botapi
 
 import (
 	"log"
+
+	r "tg-bot/internal/application"
+	u "tg-bot/internal/domain"
+	s "tg-bot/internal/infrastructure"
 
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -20,7 +24,7 @@ func Start(ctx *th.Context, update telego.Update) error {
 		tu.KeyboardRow(
 			tu.KeyboardButton("/getfilelist"),
 			tu.KeyboardButton("/getFile"),
-			tu.KeyboardButton("/getAccountInfo"),
+			tu.KeyboardButton("/loadfile"),
 		),
 	)
 
@@ -38,9 +42,9 @@ func Help(ctx *th.Context, update telego.Update) error {
 
 func GetFileList(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	var files []File
+	var files []u.File
 
-	result := DB.Find(&files)
+	result := s.DB.Find(&files)
 
 	if result.Error != nil {
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error while getting list"))
@@ -60,9 +64,9 @@ func GetFileList(ctx *th.Context, update telego.Update) error {
 
 func GetAccountList(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	var accs []Account
+	var accs []u.Account
 
-	result := DB.Find(&accs)
+	result := s.DB.Find(&accs)
 
 	if result.Error != nil {
 		_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error while getting list"))
@@ -92,7 +96,7 @@ func Info(ctx *th.Context, update telego.Update) error {
 
 func GetFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	requests.Store(chatID, GETFILE)
+	r.Requests.Store(chatID, r.GETFILE)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file hash"))
 
@@ -101,7 +105,7 @@ func GetFile(ctx *th.Context, update telego.Update) error {
 
 func GetAccountInfo(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	requests.Store(chatID, GETACC)
+	r.Requests.Store(chatID, r.GETACC)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert account ID"))
 
@@ -110,7 +114,7 @@ func GetAccountInfo(ctx *th.Context, update telego.Update) error {
 
 func LoadFile(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	requests.Store(chatID, POSTFILE)
+	r.Requests.Store(chatID, r.POSTFILE)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file and untick \"Compress the image\" option"))
 
@@ -119,7 +123,7 @@ func LoadFile(ctx *th.Context, update telego.Update) error {
 
 func FileSummary(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
-	requests.Store(chatID, GETSUM)
+	r.Requests.Store(chatID, r.GETSUM)
 
 	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "Insert file"))
 
@@ -132,13 +136,12 @@ func Message(ctx *th.Context, update telego.Update) error {
 	if update.Message != nil {
 		chatID := update.Message.Chat.ID
 
-		if _, exists := requests.Load(chatID); exists {
-			requestExecution(ctx, update)
-			requests.Delete(chatID)
+		if _, exists := r.Requests.Load(chatID); exists {
+			r.RequestExecution(ctx, update)
 		} else {
 			text := "\"" + update.Message.Text + "\"\n"
 
-			response, err := Client.Models.GenerateContent(ctx, aimodel, genai.Text(text+prompt), nil)
+			response, err := s.Client.Models.GenerateContent(ctx, s.Aimodel, genai.Text(text+s.Prompt), nil)
 			if err != nil {
 				log.Println(err)
 				return err
@@ -146,6 +149,8 @@ func Message(ctx *th.Context, update telego.Update) error {
 
 			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), response.Text()))
 		}
+
+		r.Requests.Delete(chatID)
 	}
 
 	return nil

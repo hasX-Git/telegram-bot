@@ -1,4 +1,4 @@
-package internal
+package user
 
 type Transaction struct {
 	AID  string `gorm:"column:aid"`
