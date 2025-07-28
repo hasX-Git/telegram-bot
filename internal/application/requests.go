@@ -29,7 +29,7 @@ const (
 
 var Requests sync.Map
 
-func getFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
+func getFile(ctx *th.Context, update telego.Update) {
 
 	chatID := update.Message.Chat.ID
 	hash := update.Message.Text
@@ -43,7 +43,7 @@ func getFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 		} else {
 			_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "error occured when searching for file"))
 		}
-		return nil
+		return
 	}
 
 	filepath := "./files/" + dbFile.Filename
@@ -51,7 +51,7 @@ func getFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Println("error")
-		return nil
+		return
 	}
 
 	document := tu.Document(
@@ -59,10 +59,13 @@ func getFile(ctx *th.Context, update telego.Update) *telego.SendDocumentParams {
 		tu.File(file),
 	)
 
-	return document
+	_, _ = ctx.Bot().SendDocument(ctx, document)
 }
 
-func getAcc(update telego.Update) string {
+func getAcc(ctx *th.Context, update telego.Update) {
+
+	chatID := update.Message.Chat.ID
+
 	AID := update.Message.Text
 	var acc u.Account
 
@@ -70,9 +73,11 @@ func getAcc(update telego.Update) string {
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return "no such file in database"
+			log.Println("no such file in database")
+			return
 		} else {
-			return "error occured when searching for file"
+			log.Println("error occured when searching for file")
+			return
 		}
 	}
 
@@ -93,7 +98,7 @@ func getAcc(update telego.Update) string {
 				"\n"
 	}
 
-	return accinfo
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), accinfo))
 
 }
 
@@ -195,7 +200,7 @@ func RequestExecution(ctx *th.Context, update telego.Update) {
 
 	switch state {
 	case GETACC:
-		getAcc(update)
+		getAcc(ctx, update)
 	case GETFILE:
 		getFile(ctx, update)
 	case GETSUM:
