@@ -24,7 +24,21 @@ Wherever there is <ins>#change</ins> comment, you can change those to any prefer
 
 Wherever there is <ins>#AP</ins>, which stands for App Port, it must be the same for all ports with #AP comment. For example, if in .env file the port for #AP is 5432, it must be 5432 for #AP in Dockerfile and docker-compose. Same with <ins>#DP</ins>, Database Port
 
-### 3. Running program
+### 3. .env file
+
+To get API key for AI, follow the link:
+
+    https://aistudio.google.com/apikey?_gl=1*1xg6gsd*_ga*MjY2ODYxMTg5LjE3NTI1NzcyNzA.*_ga_P1DBVKWT6V*czE3NTM3MDg0OTkkbzckZzEkdDE3NTM3MDg1MzgkajIxJGwwJGg3MDcwMDg0ODk.
+
+and generate a key. You need to insert it into **GEMINI_API_KEY** field.
+
+To get token for telegram bot, use the telegram BotFather bot:
+
+    @BotFather
+
+and create bot there. It will generate token for your bot, which you need to insert into **TOKEN** field
+
+### 4. Running program
 
 First run the myBank container with
 
