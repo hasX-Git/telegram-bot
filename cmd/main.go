@@ -8,8 +8,7 @@ import (
 )
 
 func main() {
-	s.InitServices()
-	s.ConnectToDB()
+	s.Init()
 
 	s.Bh.Handle(r.Start, th.CommandEqual("start"))
 	s.Bh.Handle(r.Help, th.CommandEqual("help"))
@@ -20,7 +19,7 @@ func main() {
 	s.Bh.Handle(r.GetAccountInfo, th.CommandEqual("getaccountinfo"))
 	s.Bh.Handle(r.GetFileList, th.CommandEqual("getfilelist"))
 	s.Bh.Handle(r.GetAccountList, th.CommandEqual("getaccountlist"))
-	s.Bh.Handle(r.Message, th.AnyMessage())
+	s.Bh.Handle(r.Response, th.AnyMessage())
 
 	_ = s.Bh.Start()
 }
