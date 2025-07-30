@@ -87,7 +87,7 @@ func getAcc(ctx *th.Context, update telego.Update) {
 		"First Name: " + acc.PersonInfo.Firstn + "\n" +
 			"Last Name: " + acc.PersonInfo.Lastn + "\n" +
 			"National ID: " + acc.PersonInfo.NID + "\n" +
-			"Account ID " + acc.AID + "\n" +
+			"Account ID: " + acc.AID + "\n" +
 			"Balance: " + strconv.Itoa(int(acc.Balance)) + "\n" +
 			"Transactions:\n"
 
