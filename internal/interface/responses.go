@@ -35,7 +35,8 @@ func Start(ctx *th.Context, update telego.Update) error {
 
 func Help(ctx *th.Context, update telego.Update) error {
 
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID), "TODO: List of all commands"))
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(update.Message.Chat.ID),
+		"/help - list of all commands\n/info - bot information\n/getFile - receive a file using hash\n/loadfile - load file into bank db\n/sumfile - get a summary on file\n/getaccountinfo - receive information about account using account ID"))
 
 	return nil
 }
@@ -87,7 +88,7 @@ func GetAccountList(ctx *th.Context, update telego.Update) error {
 func Info(ctx *th.Context, update telego.Update) error {
 	chatID := update.Message.Chat.ID
 
-	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "TODO: Info about bot"))
+	_, _ = ctx.Bot().SendMessage(ctx, tu.Message(tu.ID(chatID), "This is experimental telegram bot for learning purposes."))
 
 	return nil
 }
